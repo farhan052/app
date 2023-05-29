@@ -81,11 +81,11 @@ function Login() {
     </Form.Item>
 
     <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-     {/* <Link to="/home" > */}
+      <Link to="/home" > 
       <Button type="primary" htmlType="submit">
         Submit
       </Button>
-      {/* </Link> */}
+       </Link>
     </Form.Item>
   </Form>
     </Card>
