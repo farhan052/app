@@ -1,32 +1,112 @@
-import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./pages/Layout";
+import PropTypes from 'prop-types';
+import React from "react";
+import { useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import { Routes, Route } from "react-router-dom";
+import { layoutTypes } from "./constants/layout";
+// Import Routes all
+import { authProtectedRoutes, publicRoutes } from "./routes";
 
-import Blogs from "./pages/Blogs";
-import Contact from "./pages/Contact";
-import NoPage from "./pages/NoPage";
-import"./App.css";
+// Import all middleware
+import Authmiddleware from "./routes/route";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Home from "./pages/Home";
-function App() {
-  return (
-    <div className="App">
-      <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Login />} />
-          <Route path="blogs" element={<Blogs />} />
-          <Route path="home" element={<Home />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="*" element={<NoPage />} />
-          <Route path="reg" element={<Register />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-    </div>
+// layouts Format
+import VerticalLayout from "./components/VerticalLayout/";
+import HorizontalLayout from "./components/HorizontalLayout/";
+import NonAuthLayout from "./components/NonAuthLayout";
+
+// Import scss
+import "./assets/scss/theme.scss";
+
+// Import Firebase Configuration file
+// import { initFirebaseBackend } from "./helpers/firebase_helper";
+
+import fakeBackend from "./helpers/AuthType/fakeBackend";
+
+// Activating fake backend
+fakeBackend();
+
+// const firebaseConfig = {
+//   apiKey: process.env.REACT_APP_APIKEY,
+//   authDomain: process.env.REACT_APP_AUTHDOMAIN,
+//   databaseURL: process.env.REACT_APP_DATABASEURL,
+//   projectId: process.env.REACT_APP_PROJECTID,
+//   storageBucket: process.env.REACT_APP_STORAGEBUCKET,
+//   messagingSenderId: process.env.REACT_APP_MESSAGINGSENDERID,
+//   appId: process.env.REACT_APP_APPID,
+//   measurementId: process.env.REACT_APP_MEASUREMENTID,
+// };
+
+// init firebase backend
+// initFirebaseBackend(firebaseConfig);
+
+
+const getLayout = (layoutType) => {
+  let Layout = VerticalLayout;
+  switch (layoutType) {
+    case layoutTypes.VERTICAL:
+      Layout = VerticalLayout;
+      break;
+    case layoutTypes.HORIZONTAL:
+      Layout = HorizontalLayout;
+      break;
+    default:
+      break;
+  }
+  return Layout;
+};
+
+const App = () => {
+
+
+  const selectLayoutState = (state) => state.Layout;
+  const LayoutProperties = createSelector(
+    selectLayoutState,
+      (layout) => ({
+        layoutType: layout.layoutType,
+      })
   );
-}
+
+    const {
+      layoutType
+  } = useSelector(LayoutProperties);
+
+  const Layout = getLayout(layoutType);
+
+  return (
+    <React.Fragment>
+      <Routes>
+        {publicRoutes.map((route, idx) => (
+          <Route
+            path={route.path}
+            element={
+              <NonAuthLayout>
+                {route.component}
+              </NonAuthLayout>
+            }
+            key={idx}
+            exact={true}
+          />
+        ))}
+
+        {authProtectedRoutes.map((route, idx) => (
+          <Route
+            path={route.path}
+            element={
+              <Authmiddleware>
+                <Layout>{route.component}</Layout>
+              </Authmiddleware>}
+            key={idx}
+            exact={true}
+          />
+        ))}
+      </Routes>
+    </React.Fragment>
+  );
+};
+
+App.propTypes = {
+  layout: PropTypes.any
+};
 
 export default App;
